@@ -28,13 +28,12 @@ int calcIntervalos(int coeficientes[], int exponentes[], char simbolos[], int co
     printf("---------------------------------\n\n");
     printf("Iniciando búsqueda de intervalos donde f(a) y f(b) tengan signos opuestos:\n");
 
-    int inter1 = 1, inter2 = -1;  // Valores iniciales a probar para calcular el intervalo
+    int inter1 = 0, inter2 = -1;  // Valores iniciales a probar para calcular el intervalo
     int resfinal=0, resfinal2=0;
     int a, b;
     int salto = 0;
 
     int absoluto, absoluto2;
-    int error = 0;
     
     do {
 
@@ -67,27 +66,31 @@ int calcIntervalos(int coeficientes[], int exponentes[], char simbolos[], int co
         // Guardar el valor de inter2 en b
         b = inter2;
 
-        if((resfinal > 0 && resfinal2 > 0) || (resfinal < 0 && resfinal2 < 0)){
-            if(verbose){
-                printf("\nIntento N%d con intervalos iniciales:\n", salto+1);
-                printf("  - Intervalo: \033[1;31m[%d, %d]\n\033[0m", inter1, inter2);
-                printf("  - f(a) = %d, f(b) = %d\n", resfinal, resfinal2);
-                //printf("\033[1;31mResultado: f(%d) = %d y f(%d) = %d\n\033[0m", inter1, resfinal, inter2, resfinal2);
-            }
-        } else{
-            absoluto = abs(resfinal); // Valores absolutos de los polinomios
-            absoluto2 = abs(resfinal2);
-            
-            //2147329959 || 2147483647 
-            if(absoluto>2100000000 || absoluto2>2100000000){ // Si el resultado se pasa del tamaño de un entero descartamos el poliomio
-                printf("\n**Este polinomio no cumple con las condiciones de Bolzano.");
-                error = 1;
+        absoluto = abs(resfinal); // Valores absolutos de los polinomios
+        absoluto2 = abs(resfinal2);
+        
+        //2147329959 || 2147483647 
+        if((absoluto>21000000 || absoluto2>21000000) || (salto>5000)){ // Si el resultado se pasa del tamaño de un entero descartamos el poliomio
+            printf("\n**Este polinomio no cumple con las condiciones de Bolzano.\n");
+            return 1;
 
+        } else if(absoluto == 0 || absoluto2 == 0){
+            resfinal=1;
+            resfinal2=1;
+        } else{
+            if((resfinal > 0 && resfinal2 > 0) || (resfinal < 0 && resfinal2 < 0)){
+                if(verbose){
+                    printf("\nIntento N%d con intervalos iniciales:\n", salto+1);
+                    printf("  - Intervalo: \033[1;31m[%d, %d]\n\033[0m", inter1, inter2);
+                    printf("  - f(a) = %d, f(b) = %d\n", resfinal, resfinal2);
+                    //printf("\033[1;31mResultado: f(%d) = %d y f(%d) = %d\n\033[0m", inter1, resfinal, inter2, resfinal2);
+                }
             } else{
                 printf("\nIntento N%d con intervalos iniciales:\n", salto+1);
                 printf("  - Intervalo: \033[1;32m[%d, %d]\n\033[0m", inter1, inter2);
                 printf("  - f(a) = %d, f(b) = %d\n", resfinal, resfinal2);
                 printf("\nSe ha encontrado un intervalo donde f(a) y f(b) tienen signos opuestos.\n\n");
+                
             }
         }
 
@@ -106,8 +109,9 @@ int calcIntervalos(int coeficientes[], int exponentes[], char simbolos[], int co
     *inicio = a;
     *fin = b;
 
-    return error;
+    return 0;
 }
+
 
 void aproximacionIntervalos(int coeficientes[], int exponentes[], char simbolos[], int constante, int num_terminos, float inter1, float inter2, float precision, int verbose){
 	
@@ -120,6 +124,7 @@ void aproximacionIntervalos(int coeficientes[], int exponentes[], char simbolos[
     float  ope2, ope3;
 
     int contador=1;
+    float hidde=0;
 
 	do{
 
@@ -129,38 +134,49 @@ void aproximacionIntervalos(int coeficientes[], int exponentes[], char simbolos[
         resInterA = 0;
         resInterB = 0;
 
-		//Sustituir X por el valor de los intervalos f(a) y f(b)
-        for (int i = 0; i < num_terminos; i++) {
-            float ope1 = coeficientes[i] * pow(mediaIntervalo, exponentes[i]);
+        do{
+            //printf("primera media %f\n", mediaIntervalo);
+            //Sustituir X por el valor de los intervalos f(a) y f(b)
+            for (int i = 0; i < num_terminos; i++) {
+                float ope1 = coeficientes[i] * pow(mediaIntervalo, exponentes[i]);
 
-            ope2 = coeficientes[i] * pow(inter1, exponentes[i]);
-            ope3 = coeficientes[i] * pow(inter2, exponentes[i]);
-            
-            if (simbolos[i] == '+') {
-                resInterNuevo += ope1;
-                resInterA += ope2;
-                resInterB += ope3;
-            } else {
-                resInterNuevo -= ope1;
-                resInterA -= ope2;
-                resInterB -= ope3;
+                ope2 = coeficientes[i] * pow(inter1, exponentes[i]);
+                ope3 = coeficientes[i] * pow(inter2, exponentes[i]);
+                
+                if (simbolos[i] == '+') {
+                    resInterNuevo += ope1;
+                    resInterA += ope2;
+                    resInterB += ope3;
+                } else {
+                    resInterNuevo -= ope1;
+                    resInterA -= ope2;
+                    resInterB -= ope3;
+                }
             }
-        }
-        if (simbolos[num_terminos-1]=='+'){
-            resInterNuevo += constante;
-            resInterA += constante;
-            resInterB += constante;
-        } else {
-            resInterNuevo -= constante;
-            resInterA -= constante;
-            resInterB -= constante;
-        }
+            if (simbolos[num_terminos-1]=='+'){
+                resInterNuevo += constante;
+                resInterA += constante;
+                resInterB += constante;
+            } else {
+                resInterNuevo -= constante;
+                resInterA -= constante;
+                resInterB -= constante;
+            }
+
+            if(resInterNuevo==hidde){
+                //printf("resultado: %f\n", resInterNuevo);
+                mediaIntervalo = mediaIntervalo+0.1;
+                //printf("el nuevo media %f\n", mediaIntervalo);
+            }
+        }while (resInterNuevo==hidde);
+        
+
 
         if(verbose){
             printf("Iteración %d:\n", contador);
             //Saber que la posicion del intervalo, para mostar al usuario.
             if (inter1>inter2){
-                printf("  - Intervalo actual: [%f,%f] | f(a) = %f, f(b) = %f\n",inter2, inter1, resInterA, resInterB);
+                printf("  - Intervalo actual: [%f,%f] | f(a) = %f, f(b) = %f\n",inter2, inter1, resInterB, resInterA);
             } else{
                 printf("  - Intervalo actual: [%f,%f] | f(a) = %f, f(b) = %f\n",inter1, inter2, resInterA, resInterB);
             }
@@ -320,13 +336,13 @@ int main(int argc, char *argv[]) {
     }
 
     if(precision <= 0.0000015){ // Limitar la precision, para que evitar errores
-        printf("Precision muy baja, aumentala");
+        printf("\033[1;31m\nPrecision demasiado baja, aumentala a minimo 0.000002\033[0m\n");
     } else{
         bolzano(funcion, precision, verbose); // Funcion que realiza el Teorema de Bolzano
     }
     printf("\n----------------------------------------\n");
     printf("\033[1;35mGracias por usar el Algoritmo de Bolzano\033[0m\n");
-    printf("----------------------------------------");
+    printf("----------------------------------------\n");
 
     return 0;
 }
