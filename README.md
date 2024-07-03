@@ -52,7 +52,7 @@ Dependiendo del sistema operativo en el que estés trabajando, la compilación s
 
 - **En Windows (usando Cygwin o similar):**
     ```bash
-    bolzano.exe <polinomio>
+    bolzanoAlgoritmo.exe <polinomio>
     ```
 
 ## 🎯 Opciones de Línea de Comandos
